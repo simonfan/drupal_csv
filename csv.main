@@ -4,3 +4,7 @@
  * @file
  * Defines the default tab of the module.
  */
+
+function csv_main() {
+	return 'csv main page';
+}

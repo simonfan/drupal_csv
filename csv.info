@@ -1,8 +1,8 @@
-name = Importer
-description = Import artwork nodes through CSV files.
+name = Drupal CSV
+description = Easily integrate your CSV data into Drupal.
 package = Nail on Wall
 core = 7.x
 
-files[] = importer.module
+files[] = csv.module
 
 dependencies[] = entity
