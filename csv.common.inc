@@ -57,17 +57,23 @@ function csv_common_entity_bundle_selector($form, &$form_state, $form_values) {
 
 
 // returns a list of properties AND fields, keyed by the machine names and with label names as values
-function csv_common_get_field_and_props($entity, $bundle) {
+function csv_common_get_field_and_props($entity_type, $bundle) {
 
   // now that we know the columns to be mapped FROM,
   // we need to get the fields and properties to map TO. That depends on the node type..
 
 	// get the fields.
-  $fields = field_info_instances($entity, $bundle);
+  $fields = field_info_instances($entity_type, $bundle);
 
   // get the properties
-  $properties_info = entity_get_property_info($entity);
-  $properties = array_keys( $properties_info['properties'] );
+  $properties_info = entity_get_property_info($entity_type);
+
+  if (!empty($properties_info)) {
+    $properties = array_keys( $properties_info['properties'] );
+    $property_options = array_combine($properties, $properties);
+  } else {
+    $property_options = array();
+  }
 
   // this function is used to build the options for the fields select
   function get_field_label($field_instance) {
@@ -76,11 +82,37 @@ function csv_common_get_field_and_props($entity, $bundle) {
 
   // store field options
   $field_options = (array) array_map('get_field_label', $fields);
-  $property_options = array_combine($properties, $properties);
+  
 
 
   // build the options by merging both property options and field options.
   $map_options = array_merge($field_options, $property_options);
 
   return $map_options;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// helpers
+// this function simply filters out objects and arrays
+// and substitutes them for string messages.
+function csv_common_simplify_data($val) {
+  if ( is_string($val) || is_numeric($val) ) {
+    return $val;
+  } elseif ( is_array($val) ) {
+    return 'This is an array. Verify if you requested the right piece of info.';
+  } elseif ( is_object($val) ) {
+    return 'This is an object. Verify if you requested the right piece of info.';
+  } else {
+    return $val;
+  }
 }

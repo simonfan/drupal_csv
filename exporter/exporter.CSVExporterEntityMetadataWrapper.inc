@@ -1,6 +1,11 @@
 <?php
 
 
+$path_to_mod = drupal_get_path('module', 'csv');
+// always require common.inc
+require_once($path_to_mod .'/exporter/exporter.CSVExporterEntityMetadataWrapper.inc');
+
+
 class CSVExporterEntityMetadataWrapper {
 
 	// an array with the extra available data that should be available
@@ -16,7 +21,7 @@ class CSVExporterEntityMetadataWrapper {
 			'title',
 		),
 		'taxonomy_term_reference' => array(
-			'term_name',
+			'name',
 		),
 	);
 
@@ -115,6 +120,11 @@ class CSVExporterEntityMetadataWrapper {
 				array_push($ans, $value);
 			}
 
+			// remove falsey values
+			$ans = array_filter($ans);
+			// simplify data
+			$ans = array_map('csv_common_simplify_data', $ans);
+
 			$ans = implode($delimiter, $ans);
 
 		}
@@ -199,7 +209,11 @@ class CSVExporterEntityMetadataWrapper {
 			array_push($ans, $data);
 		}
 
+		// remove falsey values
 		$ans = array_filter($ans);
+		// simplify data
+		$ans = array_map('csv_common_simplify_data', $ans);
+
 		$ans = implode($delimiter, $ans);
 
 		return $ans;

@@ -1,11 +1,13 @@
 <?php
 
+$path_to_mod = drupal_get_path('module', 'csv');
+// always require common.inc
+require_once($path_to_mod .'/exporter/exporter.CSVExporterEntityMetadataWrapper.inc');
+
+
+
+
 function csv_exporter_build_csv($form, &$form_state, $form_values) {
-
-	$path_to_mod = drupal_get_path('module', 'csv');
-	// always require common.inc
-	require_once($path_to_mod .'/exporter/exporter.CSVExporterEntityMetadataWrapper.inc');
-
 	///////////////////////////////////////////////
 	/////// FIRST STEP: get list of entities //////
 	///////////////////////////////////////////////
@@ -29,7 +31,9 @@ function csv_exporter_build_csv($form, &$form_state, $form_values) {
 		$requested_data_names = array_filter($requested_data_names);
 
 		foreach ($requested_data_names as $k => $data_name) {
-			$col_name = build_column_name($field, $data_name);
+
+			$suffix = $data_name == 'default' ? '' : ':'.$data_name;
+			$col_name = $field . $suffix;
 
 			array_push($column_names, $col_name);
 		}
@@ -58,9 +62,11 @@ function csv_exporter_build_csv($form, &$form_state, $form_values) {
 		// wrap it with a metadata wrapper
 		$wrapper = new CSVExporterEntityMetadataWrapper($entity_type, $entity);
 
-		$i = $wrapper->export($column_names);
+		$data = $wrapper->export($column_names);
 
-		fputcsv($file_handle, $i);
+		$data = array_map('csv_common_simplify_data', $data);
+
+		fputcsv($file_handle, $data);
 	}
 
 	fclose($file_handle);
@@ -89,10 +95,4 @@ function csv_exporter_build_csv($form, &$form_state, $form_values) {
 }
 
 
-/// helpers
-function build_column_name($field_name, $data_name) {
-	$suffix = $data_name == 'default' ? '' : ':'.$data_name;
-
-	return $field_name . $suffix;
-}
 
