@@ -1,0 +1,80 @@
+<?php
+
+function csv_exporter_field_settings($form, &$form_state, $form_values) {
+
+	$path_to_mod = drupal_get_path('module', 'csv');
+	// always require common.inc
+	require_once($path_to_mod .'/exporter/exporter.CSVExporterEntityMetadataWrapper.inc');
+
+
+
+	// filter the fields to export, in order to get only the ones 
+	// that were checked.
+	$fields = array_values( $form_values['fields_to_export'] );
+	$fields = array_filter( $fields );
+
+	
+
+	// start building form
+	$form = array();
+
+	$form['field_settings'] = array(
+		'#type' => 'fieldset',
+		'#title' => 'Set which pieces from each field you want to export.',
+		'#description' => 'Each piece of information will be rendered as a column in the resulting csv file.',
+
+		'#tree' => TRUE,
+	);
+
+	foreach ($fields as $k => $field) {
+
+		$field_info_w = new CSVExporterEntityMetadataWrapper($form_values['entity_type']);
+		$available = $field_info_w->field_available_data($field);
+
+		$data_options = array_combine($available, $available);
+
+		// build a checkboxes form
+		$form['field_settings'][$field] = array(
+			'#type' => 'checkboxes',
+			'#title' => $field,
+			'#description' => 'Select the relevant information from this field.',
+			'#options' => $data_options,
+			'#default_value' => isset($form_values['field_settings'][$field]) ? $form_values['field_settings'][$field] : array('default'),
+		);
+	}
+
+	return $form;
+}
+
+
+
+/***
+ * Documentation on how field info is displayed
+ * 
+ * type = "entityreference"
+ * 
+ * 
+ *
+ *  
+ *
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,24 @@
+<?php
+/*
+this file's functionality is now at csv.common.inc
+*/
+
+function csv_importer_entity_type($form, &$form_state, $form_values) {
+	$form = array();
+
+	$entity_info = entity_get_info();
+
+	// ENTITY INFO
+	$entity_types = array_keys($entity_info);
+
+	$entity_types = array_combine($entity_types, $entity_types);
+	
+    $form['entity_type'] = array(
+    	'#title' => 'Entity type to be imported.',
+    	'#type' => 'select',
+    	'#options' => $entity_types,
+    	'#default_value' => (isset($form_values) && isset($form_values['entity_type'])) ? $form_values['entity_type'] : 'node', 
+    );
+
+	return $form;
+}

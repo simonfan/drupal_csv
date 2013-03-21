@@ -1,0 +1,18 @@
+<?php
+
+function csv_exporter_fields_to_export($form, &$form_state, $form_values) {
+	$field_prop_options = csv_common_get_field_and_props($form_values['entity_type'], $form_values['entity_bundle']);
+
+	$form = array();
+
+	$form['fields_to_export'] = array(
+		'#type' => 'checkboxes',
+		'#options' => $field_prop_options,
+
+		'#title' => 'Select the options and fields you wish to export.',
+
+		'#default_value' => isset($form_values['fields_to_export']) ? $form_values['fields_to_export'] : array(),
+	);
+
+	return $form;
+}

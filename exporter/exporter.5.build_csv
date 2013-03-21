@@ -1,0 +1,64 @@
+<?php
+
+function csv_exporter_build_csv($form, &$form_state, $form_values) {
+
+	$path_to_mod = drupal_get_path('module', 'csv');
+	// always require common.inc
+	require_once($path_to_mod .'/exporter/exporter.CSVExporterEntityMetadataWrapper.inc');
+
+	///////////////////////////////////////////////
+	/////// FIRST STEP: get list of entities //////
+	///////////////////////////////////////////////
+	$query = new EntityFieldQuery();
+
+	$query->entityCondition('entity_type', $form_values['entity_type'])
+		->entityCondition('bundle', $form_values['entity_bundle']);
+
+	$res = $query->execute();
+	$entity_previews = $res[ $form_values['entity_type'] ];
+
+
+	///////////////////////////////////////////
+	///// SECOND STEP: build column names /////
+	///////////////////////////////////////////
+	// first build the column names for the csv file
+	$column_names = array();
+
+	foreach ($form_values['field_settings'] AS $field => $requested_data_names) {
+		// first remove falsey values from the requested_data_names array
+		$requested_data_names = array_filter($requested_data_names);
+
+		foreach ($requested_data_names as $k => $data_name) {
+			$col_name = build_column_name($field, $data_name);
+
+			array_push($column_names, $col_name);
+		}
+	}
+
+	//////////////////////////////////////////////////////////////
+	///// THIRD STEP: for each entity, get the requested data ////
+	//////////////////////////////////////////////////////////////
+	$entity_type = $form_values['entity_type'];
+
+	foreach ($entity_previews as $entity_id => $entity_preview) {
+		// load the full entity.
+		$entity = entity_load( $entity_type, array($entity_id) );
+		$entity = $entity[$entity_id];
+
+		// wrap it with a metadata wrapper
+		$wrapper = new CSVExporterEntityMetadataWrapper($entity_type, $entity);
+
+		$i = $wrapper->export($column_names);
+
+		__dump($i);
+	}
+}
+
+
+/// helpers
+function build_column_name($field_name, $data_name) {
+	$suffix = $data_name == 'default' ? '' : ':'.$data_name;
+
+	return $field_name . $suffix;
+}
+

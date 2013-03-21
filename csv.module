@@ -27,13 +27,13 @@ function csv_menu() {
 	);
 
 	$items['admin/csv/import'] = array(
-		'title' => 'Artwork CSV importer',
+		'title' => 'Import',
 		'type' => MENU_LOCAL_TASK,
 
 		'page callback' => 'drupal_get_form',
-		'page arguments' => array('importer'),
+		'page arguments' => array('csv_importer'),
 
-        'file' => 'importer/importer.0.main',
+        'file' => 'importer/importer.main',
 
 		'access arguments' => array('create content'),
 	);
@@ -53,7 +53,8 @@ function csv_menu() {
 		'type' => MENU_LOCAL_TASK,
 		'weight' => 1,
 
-		'page callback' => 'csv_exporter_main',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('csv_exporter'),
 
 		'file' => 'exporter/exporter.main',
 

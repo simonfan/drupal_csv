@@ -6,21 +6,18 @@
  * 
  * Requires a helper function which build the options to map to.
  */
-function importer_map_fields($form, &$form_state) {
-  $prev_step = (int) $form_state['step'] - 1;
+function csv_importer_map_fields($form, &$form_state, $form_values) {
 
-  $stored = $form_state['step_information'][$prev_step]['stored_values'];
-
-  $delimiter = isset($stored['csv_delimiter']) ? $stored['csv_delimiter'] : ',';
-  $enclosure = isset($stored['csv_enclosure']) ? $stored['csv_enclosure'] : '"';
+  $delimiter = (isset($form_values['csv_delimiter']) && $form_values['csv_delimiter'] != '') ? $form_values['csv_delimiter'] : ',';
+  $enclosure = (isset($form_values['csv_enclosure']) && $form_values['csv_enclosure'] != '') ? $form_values['csv_enclosure'] : '"';
 
   // get the first line of the CSV file
-  $file_obj = file_load($stored['file']);
+  $file_obj = file_load($form_values['file']);
   $file_resource = fopen($file_obj->uri, 'r');
   $csv_first_line = fgetcsv($file_resource, NULL, $delimiter, $enclosure);
 
   // get the column names
-  if ($stored['csv_has_column_names']) {
+  if ($form_values['csv_has_column_names']) {
     // if file has the column names in the first row..
     $csv_col_names = $csv_first_line;
   } else {
@@ -29,7 +26,7 @@ function importer_map_fields($form, &$form_state) {
   }
 
   // get the options for the column correspondant.
-  $map_options = importer_helper_get_field_and_props($stored['entity_type'], $stored['entity_subtype']);
+  $map_options = csv_common_get_field_and_props($form_values['entity_type'], $form_values['entity_bundle']);
 
   // start the form building process.
   $form = array();
@@ -131,36 +128,6 @@ function importer_map_fields($form, &$form_state) {
 /////////////////////////////////
 /////////// HELPERS /////////////
 /////////////////////////////////
-
-// returns a list of properties AND fields, keyed by the machine names and with label names as values
-function importer_helper_get_field_and_props($entity, $bundle) {
-
-  // now that we know the columns to be mapped FROM,
-  // we need to get the fields and properties to map TO. That depends on the node type..
-
-	// get the fields.
-  $fields = field_info_instances($entity, $bundle);
-
-  // get the properties
-  $properties_info = entity_get_property_info($entity);
-  $properties = array_keys( $properties_info['properties'] );
-
-  // this function is used to build the options for the fields select
-  function get_field_label($field_instance) {
-    return $field_instance['label'];
-  }
-
-  // store field options
-  $field_options = (array) array_map('get_field_label', $fields);
-  $property_options = array_combine($properties, $properties);
-
-
-  // build the options by merging both property options and field options.
-  $map_options = array_merge($field_options, $property_options);
-
-  return $map_options;
-}
-
 
 // searches through the map options for the column name and returns a suggested correspondant.
 function importer_helper_get_suggested_correspondant($column_name, $map_options) {

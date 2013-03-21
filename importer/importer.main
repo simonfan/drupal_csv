@@ -42,35 +42,123 @@
  *
  * @ingroup form_example
  */
-function _importer_steps() {
+function _csv_importer_steps() {
   return array(
       1 => array(
-        'title' => 'Upload the .csv file and choose the node type you wish to import to.',
-        'form' => 'importer_file_and_type',
-        'file' => 'importer/importer.1.file_and_type',
+        // uses csv.common.inc
+        'title' => 'Choose the Entity Type you wish to import',
+        'form' => 'csv_common_entity_type_selector',
+
+        'expected_values' => array('entity_type'),
+
+        'file' => 'csv.common.inc',
       ),
       2 => array(
-        'title' => 'Map the columns from the .csv file to the corresponding node properties and fields.',
-        'form' => 'importer_map_fields',
-        'file' => 'importer/importer.2.map_fields',
+        // uses csv.common.inc
+        'title' => 'Choose the Entity Type Bundle you wish to import',
+        'form' => 'csv_common_entity_bundle_selector',
+
+        'expected_values' => array('entity_bundle'),
+
+        'file' => 'csv.common.inc',
       ),
+
       3 => array(
-        'title' => 'Confirm field mapping and other import information',
-        'form' => 'importer_confirm_data',
-        'file' => 'importer/importer.3.confirm_data',
+        'title' => 'Upload the .csv file and set its options.',
+        'form' => 'csv_importer_file',
+
+        'expected_values' => array(
+          'file',
+          'csv_has_column_names',
+          'csv_delimiter',
+          'csv_enclosure',
+          'temp_file_base_path'
+        ),
+
+        'file' => 'importer/importer.3.file',
       ),
       4 => array(
-        'title' => 'Verify results and authorize updates',
-        'form' => 'importer_loop_csv',
-        'file' => 'importer/importer.4.loop_csv',
+        'title' => 'Map the columns from the .csv file to the corresponding node properties and fields.',
+        'form' => 'csv_importer_map_fields',
+
+        'expected_values' => array(
+          'csv_col_names',
+          'csv_map',
+          'identifier_field_name',
+        ),
+
+        'file' => 'importer/importer.4.map_fields',
       ),
       5 => array(
+        'title' => 'Confirm field mapping and other import information',
+        'form' => 'csv_importer_confirm_data',
+
+        'expected_values' => array(), // no values are expected from here. this is just a confirmation step.
+
+        'file' => 'importer/importer.5.confirm_data',
+      ),
+      6 => array(
+        'title' => 'Verify results and authorize updates',
+        'form' => 'csv_importer_loop_csv',
+
+        'expected_values' => array('final_confirm'),
+
+        'file' => 'importer/importer.6.loop_csv',
+      ),
+      7 => array(
         'title' => 'Creations and updates made',
-        'form' => 'importer_loop_csv',
-        'file' => 'importer/importer.4.loop_csv',
+        'form' => 'csv_importer_loop_csv',
+
+        'expected_values' => array(),
+
+        'file' => 'importer/importer.6.loop_csv',
       ),
     );
 }
+
+
+/**
+ * A function used to save all form values in a single array
+ */
+function _csv_importer_get_form_values($form_state) {
+  $step_infos = _csv_importer_steps();
+  $step_datas = $form_state['step_information'];
+
+  $steps = array_keys($step_infos);
+
+  // unify all the collected information.
+  $info = array();
+
+  foreach ($steps as $step) {
+
+    $stp_data = isset($step_datas[$step]['stored_values']) ? $step_datas[$step]['stored_values'] : FALSE;
+    $stp_expected_values = $step_infos[$step]['expected_values'];
+
+    // only try to get the info if the step's stored values are ready.
+    if ($stp_data && count($stp_expected_values) > 0) {
+
+      foreach ($stp_expected_values as $key => $vname) {
+        
+        // try to get this information from the step_data
+        if (isset($stp_data[$vname])) {
+
+          $info[$vname] = $stp_data[$vname];
+
+        }
+
+      }
+
+    } else {
+      continue;
+    }
+
+  }
+
+  return $info;
+}
+
+
+
 
 /**
  * The primary formbuilder function for the wizard form. This is the form that
@@ -91,7 +179,7 @@ function _importer_steps() {
  *
  * @ingroup form_example
  */
-function importer($form, &$form_state) {
+function csv_importer($form, &$form_state) {
 
   // Initialize a description of the steps for the wizard.
   if (empty($form_state['step'])) {
@@ -100,7 +188,7 @@ function importer($form, &$form_state) {
     // This array contains the function to be called at each step to get the
     // relevant form elements. It will also store state information for each
     // step.
-    $form_state['step_information'] = _importer_steps();
+    $form_state['step_information'] = _csv_importer_steps();
   }
   $step = &$form_state['step'];
   $step_title = $form_state['step_information'][$step]['title'];
@@ -112,21 +200,28 @@ function importer($form, &$form_state) {
   //////////////////////////////////////////////
 
   // Require the file that holds the step function.
+  $path_to_mod = drupal_get_path('module', 'csv');
+
+  // always require common.inc
+  require_once($path_to_mod .'/csv.common.inc');
+
+  // require form step specific file
   if ( isset($form_state['step_information'][$step]['file']) ) {
-    $path_to_mod = drupal_get_path('module', 'csv');
     require_once( $path_to_mod .'/'. $form_state['step_information'][$step]['file'] );
   }
+
 
   //////////////////////////////////////////////
   ///////////////// CUSTOMIZED! ////////////////
   //////////////////////////////////////////////
 
 
-
-
+  // build a object with all form values
+  $form_values = _csv_importer_get_form_values($form_state);
+  
   // Call the function named in $form_state['step_information'] to get the
   // form elements to display for this step.
-  $form = $form_state['step_information'][$step]['form']($form, $form_state);
+  $form = $form_state['step_information'][$step]['form']($form, $form_state, $form_values);
 
   // Show the 'previous' button if appropriate. Note that #submit is set to
   // a special submit handler, and that we use #limit_validation_errors to
@@ -138,7 +233,7 @@ function importer($form, &$form_state) {
       '#type' => 'submit',
       '#value' => t('Previous'),
       '#name' => 'prev',
-      '#submit' => array('importer_previous_submit'),
+      '#submit' => array('csv_importer_previous_submit'),
       '#limit_validation_errors' => array(),
     );
   }
@@ -150,14 +245,14 @@ function importer($form, &$form_state) {
       '#type' => 'submit',
       '#value' => t('Next'),
       '#name' => 'next',
-      '#submit' => array('importer_next_submit'),
+      '#submit' => array('csv_importer_next_submit'),
     );
   }
   else {
     // Just in case there are no more steps, we use the default submit handler
     // of the form wizard. Call this button Finish, Submit, or whatever you
     // want to show. When this button is clicked, the
-    // importer_submit handler will be called.
+    // csv_importer_submit handler will be called.
     $form['finish'] = array(
       '#type' => 'submit',
       '#value' => t('Finish'),
@@ -183,7 +278,7 @@ function importer($form, &$form_state) {
  *
  * @ingroup form_example
  */
-function importer_previous_submit($form, &$form_state) {
+function csv_importer_previous_submit($form, &$form_state) {
   $current_step = &$form_state['step'];
   $form_state['step_information'][$current_step]['stored_values'] = $form_state['values'];
   if ($current_step > 1) {
@@ -208,7 +303,7 @@ function importer_previous_submit($form, &$form_state) {
  *
  * @ingroup form_example
  */
-function importer_next_submit($form, &$form_state) {
+function csv_importer_next_submit($form, &$form_state) {
   $current_step = &$form_state['step'];
   $form_state['step_information'][$current_step]['stored_values'] = $form_state['values'];
 
@@ -259,7 +354,7 @@ function importer_next_submit($form, &$form_state) {
  *
  * @ingroup form_example
  */
-function importer_submit($form, &$form_state) {
+function csv_importer_submit($form, &$form_state) {
   $current_step = &$form_state['step'];
   $form_state['step_information'][$current_step]['stored_values'] = $form_state['values'];
 

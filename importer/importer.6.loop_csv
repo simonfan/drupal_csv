@@ -6,29 +6,19 @@
  * once for checking the creations and updates
  * and another time for effectively creating the nodes.
  */
-function importer_loop_csv($form, &$form_state) {
-
-	$step_data = $form_state['step_information'];
-
+function csv_importer_loop_csv($form, &$form_state, $form_values) {
 
 	///////////////////
 	//// VARS /////////
 	///////////////////
 
-	// file info was set on the first form step.
-	$file_info = $step_data[1]['stored_values'];
-
-	// identifier field name was set on the second step
-	$identifier_field_name = $step_data[2]['stored_values']['identifier_field_name'];
-	$csv_col_names = $step_data[2]['stored_values']['csv_col_names'];
-	$csv_map = $step_data[2]['stored_values']['csv_map'];
 
 	// first load the csv file.
 	// get the first line of the CSV file
-	$delimiter = $file_info['csv_delimiter'];
-	$enclosure = $file_info['csv_enclosure'];
+	$delimiter = $form_values['csv_delimiter'];
+	$enclosure = $form_values['csv_enclosure'];
 
-	$file_drupal_obj = file_load($file_info['file']);
+	$file_drupal_obj = file_load($form_values['file']);
 	$file_resource = fopen($file_drupal_obj->uri, 'r');
 
 	// variables to hold the newly created resources
@@ -61,7 +51,7 @@ function importer_loop_csv($form, &$form_state) {
 
 		*/
 
-		if ($row_no == 0 && $file_info['csv_has_column_names']) {
+		if ($row_no == 0 && $form_values['csv_has_column_names']) {
 			// skip row 0 if it has the column names
 			$row_no += 1;
 			continue;
@@ -83,11 +73,11 @@ function importer_loop_csv($form, &$form_state) {
 
 		// first check if the entity already exists
 		if ( isset($identifier_field) && $identifier_field != '' ) {
-			$identifier_field_value = $row_columns[$identifier_field_name];
+			$identifier_field_value = $row_columns[$form_values['identifier_field_name']];
 
 			// entity_load function returns an array of entities
 			$entity = entity_load(
-				$file_info['entity_type'], 			// the entity type
+				$form_values['entity_type'], 			// the entity type
 				array( $identifier_field_value ) 	// the identifier field value
 			);
 
@@ -107,11 +97,11 @@ function importer_loop_csv($form, &$form_state) {
 			$entity_data = array();
 
 			// if there is a type/bundle set, use it
-			if ( isset($file_info['entity_subtype']) )  {
-				$entity_data['type'] = $file_info['entity_subtype'];
+			if ( isset($form_values['entity_bundle']) )  {
+				$entity_data['type'] = $form_values['entity_bundle'];
 			}
 
-			$entity = entity_create( $file_info['entity_type'], $entity_data);
+			$entity = entity_create( $form_values['entity_type'], $entity_data);
 		}
 
 
@@ -121,7 +111,7 @@ function importer_loop_csv($form, &$form_state) {
 		//////////////////////////////////////////
 
 		// ImporterEntityMetadataWrapper is defined below
-		$importer_wrapper = new ImporterEntityMetadataWrapper($file_info['entity_type'], $entity );
+		$importer_wrapper = new ImporterEntityMetadataWrapper($form_values['entity_type'], $entity );
 
 
 
@@ -134,17 +124,17 @@ function importer_loop_csv($form, &$form_state) {
 		foreach ($row_columns as $col_no => $col_value) {
 
 			// vars 
-			// $csv_col_names,
+			// $form_values['csv_col_names'],
 			// were all defined in the begining, at VARS
 
 			// get the col_name
-			$csv_col_name = $csv_col_names[ $col_no ];
+			$csv_col_name = $form_values['csv_col_names'][ $col_no ];
 
 			// get the map info object
-			$csv_column_info = $csv_map[ $csv_col_name ];
+			$csv_column_info = $form_values['csv_map'][ $csv_col_name ];
 
 			// if the column is the identifier column, do not set it.
-			if ($csv_column_info['maps_to'] == $identifier_field_name) {
+			if ($csv_column_info['maps_to'] == $form_values['identifier_field_name']) {
 				continue;
 			}
 
@@ -173,7 +163,7 @@ function importer_loop_csv($form, &$form_state) {
 					'field_name' => $csv_column_info['maps_to'],
 					'value' => $col_value,
 					'default_value' => $col_default_value,
-					'temp_file_base_path' => $file_info['temp_file_base_path']
+					'temp_file_base_path' => $form_values['temp_file_base_path']
 				);
 
 				// ImporterEntityMetadataWrapper
@@ -191,8 +181,8 @@ function importer_loop_csv($form, &$form_state) {
 		/// BUILD THE INFORMATION TO BE DISPLAYED IN THE TABLE
 		$entity_display = array();
 		// the id
-		if ( isset($identifier_field_name) && $identifier_field_name != '') {
-			$entity_display[0] = $importer_wrapper->{$identifier_field_name}->value();
+		if ( isset($form_values['identifier_field_name']) && $form_values['identifier_field_name'] != '') {
+			$entity_display[0] = $importer_wrapper->{$form_values['identifier_field_name']}->value();
 		} else {
 			$entity_display[0] = 'Identifier field unknown.';
 		}
@@ -228,15 +218,12 @@ function importer_loop_csv($form, &$form_state) {
 	////////////////////////////////////////////////////////////////////////
 	// FIFTH STEP: CHECK IF THE UPDATES AND CREATIONS HAVE BEEN CONFIRMED //
 	////////////////////////////////////////////////////////////////////////
-	if ( isset($step_data[4]['stored_values']) 
-		&& isset($step_data[4]['stored_values']['final_confirm']) ) {
-
-		$confirmations = $step_data[4]['stored_values']['final_confirm'];
+	if ( isset($form_values['final_confirm']) ) {
 
 		// if the confirmation has already been done...
 		// SAVE !!!
 
-		if ( isset($confirmations['confirm_create']) && $confirmations['confirm_create'] ) {
+		if ( isset($form_values['final_confirm']['confirm_create']) && $form_values['final_confirm']['confirm_create'] ) {
 			foreach ($to_create_wrappers as $key => $wrapper) {
 				$save_status = $wrapper->save();
 
@@ -252,7 +239,7 @@ function importer_loop_csv($form, &$form_state) {
 			}
 		}
 
-		if ( isset($confirmations['confirm_update']) && $confirmations['confirm_update'] ){
+		if ( isset($form_values['final_confirm']['confirm_update']) && $form_values['final_confirm']['confirm_update'] ){
 			foreach ($to_update_wrappers as $key => $wrapper) {
 				$save_status = $wrapper->save();
 
@@ -333,6 +320,25 @@ function importer_loop_csv($form, &$form_state) {
 		return $form;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -508,6 +514,16 @@ class ImporterEntityMetadataWrapper  {
 
 			case 'title_string':
 				$value = isset($value) ? strval($value) : '';
+				break;
+
+			case 'text_with_summary':
+				$value_strlen = strlen($value);
+				$summary = ( $value_strlen <= 600 ) ? $value : '';
+
+				$value = array(
+					'value' => $value,
+					'summary' => $summary,
+				);
 				break;
 
 			// defaults to string

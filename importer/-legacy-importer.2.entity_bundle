@@ -1,0 +1,29 @@
+<?php
+/*
+this file's functionality is now at csv.common.inc
+*/
+
+function csv_importer_entity_bundle($form, &$form_state, $form_values) {
+	$form = array();
+
+
+	// ENTITY BUNDLES
+	$entity_type = $form_values['entity_type'];
+
+	$entity_info = entity_get_info($entity_type);
+
+	$bundles = array_keys($entity_info['bundles']);
+
+	$bundles_for_selection = array_combine($bundles, $bundles);
+
+	$form['entity_bundle'] = array(
+		'#type' => 'select',
+		'#options' => $bundles_for_selection,
+
+		'#title' => t('Select the node type to import'),
+		'#default_value' => !empty($form_values['entity_bundle']) ? $form_values['entity_bundle'] : '',
+	);
+
+
+	return $form;
+}
