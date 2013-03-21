@@ -1,22 +1,32 @@
 <?php
+
+
+// require the module file
+$path_to_mod = drupal_get_path('module', 'csv');
+require_once($path_to_mod .'/csv.module');
+
 /**
  * Implement hook_install();
+ * This function just creates a folder inside sites/default/files for the user to upload and ge tfiles.
  */
 function csv_install() {
+	$path_to_temp_dir = _csv_get_path_to_temp_dir();
 
-	$path_to_files = variable_get('file_' . file_default_scheme() . '_path', conf_path() . '/files');
-
-	if (is_dir($path_to_files. '/csv_module_temp')) {
+	if (is_dir($path_to_temp_dir)) {
 		// if dir already exitsts
 		return;
 	}
 
-	$mkdir = mkdir($path_to_files. '/csv_module_temp');
+	// this is to set this dir open for user manipulation
+	$oldumask = umask(0); 
+	$mkdir = mkdir($path_to_temp_dir, 0777); // or even 01777 so you get the sticky bit set 
+	umask($oldumask); 
+	
 
 	if ($mkdir) {
-		drupal_set_message('A /csv_module_temp dir inside your default files dir was successfully created.');
+		drupal_set_message('CSV module has successfully created the $path_to_temp_dir directory. It will be used for file transfers and CSV downloads.');
 	} else {
-		drupal_set_message('CSV module could not create the /csv_module_temp dir inside your default files directory. Please verify permission settings.');
+		drupal_set_message('CSV module could not create the $path_to_temp_dir directory. Please verify permission settings.');
 	}
 }
 
@@ -25,24 +35,23 @@ function csv_install() {
  * Implement hook_uninstall();
  */
 function csv_uninstall() {
+	$path_to_temp_dir = _csv_get_path_to_temp_dir();
 
-	$path_to_files = variable_get('file_' . file_default_scheme() . '_path', conf_path() . '/files');
-
-	if (!is_dir($path_to_files. '/csv_module_temp')) {
+	if (!is_dir($path_to_temp_dir)) {
 		// if it is not a dir, do nothing..
 		return;
 	}
 
-	$files = glob($path_to_files . '/csv_module_temp/*');			// get all file names
+	$files = glob($path_to_temp_dir .'/*');			// get all file names
 	foreach($files as $file) { 					// iterate files
 		if(is_file($file)) unlink($file); 		// delete file
 	}
 
-	$rmdir = rmdir($path_to_files. '/csv_module_temp');
+	$rmdir = rmdir($path_to_temp_dir);
 
 	if ($rmdir) {
-		drupal_set_message('All files inside /csv_module_temp were removed and the directory itself too.');
+		drupal_set_message('All files inside $path_to_temp_dir directory were removed and the directory itself too.');
 	} else {
-		drupal_set_message('Unable to remove /csv_module_temp dir. Check permission settings.');
+		drupal_set_message('Unable to remove $path_to_temp_dir dir. Check permission settings.');
 	}
 }

@@ -35,8 +35,18 @@ function csv_exporter_build_csv($form, &$form_state, $form_values) {
 		}
 	}
 
+
+	////////////////////////////////////////////
+	/////// THIRD STEP: build the file /////////
+	////////////////////////////////////////////
+	$file_n = $form_values['file_dir'] .'/'. $form_values['file_name'];
+	$file_handle = fopen($file_n, 'w') OR die('cannot open file');
+
+	// write the first line, which should be the column names
+	fputcsv($file_handle, $column_names);
+
 	//////////////////////////////////////////////////////////////
-	///// THIRD STEP: for each entity, get the requested data ////
+	///// FOURTH STEP: for each entity, get the requested data ///
 	//////////////////////////////////////////////////////////////
 	$entity_type = $form_values['entity_type'];
 
@@ -50,8 +60,32 @@ function csv_exporter_build_csv($form, &$form_state, $form_values) {
 
 		$i = $wrapper->export($column_names);
 
-		__dump($i);
+		fputcsv($file_handle, $i);
 	}
+
+	fclose($file_handle);
+
+
+	//$variables: An associative array containing the keys 'text', 'path', and 'options'. See the l() function for information about these variables.
+
+	$link_to_file = l(
+		$form_values['file_name'],
+		$form_values['file_dir'] . '/' .$form_values['file_name']
+	);
+
+	$form = array();
+
+	$form['results'] = array(
+		'#type' => 'fieldset',
+		'#title' => 'Your file:',
+	);
+
+	$form['results']['resulting_file'] = array(
+		'#type' => 'hidden',
+		'#prefix' => $link_to_file
+	);
+
+	return $form;
 }
 
 

@@ -1,9 +1,7 @@
 <?php
 
 function csv_exporter_file_settings($form, &$form_state, $form_values) {
-	$path_to_mod = drupal_get_path('module', 'csv');
-	$csv_temp_dir_path = $path_to_mod . '/temp';
-
+	$csv_temp_dir_path = _csv_get_path_to_temp_dir();
 
 	$form = array();
 

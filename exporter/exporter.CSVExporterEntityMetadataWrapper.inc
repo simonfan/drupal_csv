@@ -47,7 +47,7 @@ class CSVExporterEntityMetadataWrapper {
 			$extra  				// some extra artificially available values. These we will have to manually build in the next phase if checked.
 		);
 
-		
+
 		return $data_names;
 	}
 
@@ -176,6 +176,10 @@ class CSVExporterEntityMetadataWrapper {
 	}
 
 	public function extract_data_from_single($item, $data_name) {
+		if (!isset($item)) {
+			return NULL;
+		}
+
 		if ( is_object($item) ) {
 			$ans = isset($item->{$data_name}) ? $item->{$data_name} : NULL;
 		} elseif ( is_array($item) ) {

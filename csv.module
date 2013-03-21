@@ -61,5 +61,30 @@ function csv_menu() {
 		'access arguments' => array('create content')
 	);
 
+	$items['admin/csv/exporter/end'] = array(
+		'title' => 'Export finished',
+
+		'page callback' => 'csv_exporter_end',
+
+		'file' => 'exporter/exporter.end',
+
+		'access arguments' => array('create content')
+	);
+
 	return $items;
+}
+
+
+
+
+
+
+
+/**
+ * Define a function to get the path to the /csv_module_temp folder
+ */
+function _csv_get_path_to_temp_dir() {
+	$path_to_files = variable_get('file_' . file_default_scheme() . '_path', conf_path() . '/files');
+
+	return $path_to_files . '/csv_module_temp';
 }

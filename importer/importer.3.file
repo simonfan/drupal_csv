@@ -57,15 +57,12 @@ function csv_importer_file($form, &$form_state, $form_values) {
   );
 
 
-
-  $path_to_mod = drupal_get_path('module', 'csv');
-  $path_to_default_temp = $path_to_mod . '/temp';
+  $path_to_default_temp = _csv_get_path_to_temp_dir();
 
   $form['uploads'] = array(
     '#type' => 'fieldset',
     '#title' => t('Upload configurations'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsible' => TRUE
   );
 
   $form['uploads']['temp_file_base_path'] = array(

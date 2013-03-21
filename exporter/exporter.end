@@ -1,0 +1,5 @@
+<?php
+
+function csv_exporter_end() {
+	return 'C\'est fini.';
+}
