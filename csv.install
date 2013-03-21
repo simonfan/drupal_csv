@@ -1,0 +1,48 @@
+<?php
+/**
+ * Implement hook_install();
+ */
+function csv_install() {
+
+	$path_to_files = variable_get('file_' . file_default_scheme() . '_path', conf_path() . '/files');
+
+	if (is_dir($path_to_files. '/csv_module_temp')) {
+		// if dir already exitsts
+		return;
+	}
+
+	$mkdir = mkdir($path_to_files. '/csv_module_temp');
+
+	if ($mkdir) {
+		drupal_set_message('A /csv_module_temp dir inside your default files dir was successfully created.');
+	} else {
+		drupal_set_message('CSV module could not create the /csv_module_temp dir inside your default files directory. Please verify permission settings.');
+	}
+}
+
+
+/**
+ * Implement hook_uninstall();
+ */
+function csv_uninstall() {
+
+	$path_to_files = variable_get('file_' . file_default_scheme() . '_path', conf_path() . '/files');
+
+	if (!is_dir($path_to_files. '/csv_module_temp')) {
+		// if it is not a dir, do nothing..
+		return;
+	}
+
+	$files = glob($path_to_files . '/csv_module_temp/*');			// get all file names
+	foreach($files as $file) { 					// iterate files
+		if(is_file($file)) unlink($file); 		// delete file
+	}
+
+	$rmdir = rmdir($path_to_files. '/csv_module_temp');
+
+	if ($rmdir) {
+		drupal_set_message('All files inside /csv_module_temp were removed and the directory itself too.');
+	} else {
+		drupal_set_message('Unable to remove /csv_module_temp dir. Check permission settings.');
+	}
+}
