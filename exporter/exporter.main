@@ -79,12 +79,20 @@ function _csv_exporter_steps() {
         'file' => 'exporter/exporter.4.field_settings',
       ),
       5 => array(
+        'title' => 'File settings',
+        'form' => 'csv_exporter_file_settings',
+
+        'expected_values' => array('file_dir', 'file_name'),
+
+        'file' => 'exporter/exporter.5.file_settings',
+      ),
+      6 => array(
         'title' => 'CSV Building',
         'form' => 'csv_exporter_build_csv',
 
         'expected_values' => array(),
 
-        'file' => 'exporter/exporter.5.build_csv',
+        'file' => 'exporter/exporter.6.build_csv',
       )
     );
 }

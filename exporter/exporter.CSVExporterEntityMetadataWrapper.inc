@@ -26,8 +26,10 @@ class CSVExporterEntityMetadataWrapper {
 
 
 	public function field_available_data($field_name) {
+		// get field info
 		$finfo = field_info_field($field_name);
-
+		// if field_info_field returns NULL, that menas the $field_name refer not to a field, but to a property
+		$finfo = isset($finfo) ? $finfo : array( 'type' => 'property', 'columns' => array(), 'cardinality' => 1 );
 
 		$field_columns = $finfo['columns'];
 
@@ -45,6 +47,7 @@ class CSVExporterEntityMetadataWrapper {
 			$extra  				// some extra artificially available values. These we will have to manually build in the next phase if checked.
 		);
 
+		
 		return $data_names;
 	}
 
@@ -159,8 +162,6 @@ class CSVExporterEntityMetadataWrapper {
 			if ($is_single) {
 				$item = $this->wrapper->{$field_name}->raw();
 
-				__dump($item);
-
 				$ans = $this->extract_data_from_single($item, $data_name);
 			} else {
 				$list = $this->wrapper->{$field_name}->raw();
@@ -173,10 +174,6 @@ class CSVExporterEntityMetadataWrapper {
 
 		return $ans;
 	}
-
-
-
-
 
 	public function extract_data_from_single($item, $data_name) {
 		if ( is_object($item) ) {
@@ -203,13 +200,6 @@ class CSVExporterEntityMetadataWrapper {
 
 		return $ans;
 	}
-
-
-
-
-
-
-
 
 
 	public function export($field_data_names) {
