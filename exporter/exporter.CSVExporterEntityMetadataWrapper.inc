@@ -27,6 +27,9 @@ class CSVExporterEntityMetadataWrapper {
 
 	public function __construct($entity_type, $entity = NULL) {
 		$this->wrapper = entity_metadata_wrapper($entity_type, $entity);
+
+		$this->entity_type = $entity_type;
+		$this->entity = $entity;
 	}
 
 
@@ -128,7 +131,33 @@ class CSVExporterEntityMetadataWrapper {
 			$ans = implode($delimiter, $ans);
 
 		}
+/*
 
+
+		// if the answer is still null, try using another function for getting the field's value
+		if (empty($ans)) {
+			$ans = field_get_items($this->entity_type, $this->entity, $field_name);
+
+			if (!empty($ans)) {
+				if (count($ans) == 1) {
+					// it is a single value
+					// do nothing.
+
+				} elseif (count($ans) > 1) {
+					// it is a list of values
+
+					// remove falsey values
+					$ans = array_filter($ans);
+					// simplify data
+					$ans = array_map('csv_common_simplify_data', $ans);
+
+					$ans = implode($delimiter, $ans);
+				}
+			} else {
+				$ans = NULL;
+			}
+		}
+*/
 		return $ans;
 	}
 

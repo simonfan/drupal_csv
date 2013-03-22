@@ -163,7 +163,9 @@ function csv_importer_loop_csv($form, &$form_state, $form_values) {
 					'field_name' => $csv_column_info['maps_to'],
 					'value' => $col_value,
 					'default_value' => $col_default_value,
-					'temp_file_base_path' => $form_values['temp_file_base_path']
+					'temp_file_base_path' => $form_values['temp_file_base_path'],
+					'entity_type' => $form_values['entity_type'],
+					'entity_bundle' => $form_values['entity_bundle'],
 				);
 
 				// ImporterEntityMetadataWrapper
@@ -375,6 +377,8 @@ class ImporterEntityMetadataWrapper  {
 		//	'default_value', 
 		//	'field_name', 
 		//	'temp_file_base_path'
+		//	'entity_type',
+		//	'entity_bundle'
 		// )
 
 		// VARS
@@ -388,11 +392,21 @@ class ImporterEntityMetadataWrapper  {
 		// if there is no field info, that means that the field_name 
 		// refers to a entity REAL property and not a entity field property
 		// If this is the case, mock a field_info object
-		if ( !isset($field_info) || $field_info == NULL ) {
-			$field_info = array(
-				'type' => 'title_string',
-				'cardinality' => 1,
-			);
+		if ( !isset($field_info) ) {
+			if ($data['entity_type'] == 'taxonomy_term') {
+
+				// tthis is a special case, when the entity type is a taxonomy term.
+
+				$field_info = array(
+					'type' => 'taxonomy_term_name',
+					'cardinality' => 1,
+				);
+			} else {
+				$field_info = array(
+					'type' => 'title_string',
+					'cardinality' => 1,
+				);
+			}
 		}
 
 		// the base path for the file.. this was set on the form's first step.
@@ -512,6 +526,10 @@ class ImporterEntityMetadataWrapper  {
 				$value = $this->format_date($value);
 				break;
 
+			case 'taxonomy_term_name':
+				$value = $this->format_taxonomy_term($value);
+				break;
+
 			case 'title_string':
 				$value = isset($value) ? strval($value) : '';
 				break;
@@ -523,6 +541,8 @@ class ImporterEntityMetadataWrapper  {
 				$value = array(
 					'value' => $value,
 					'summary' => $summary,
+					// set the format to be always full_html, as this is the most flexible one..
+					'format' => 'full_html'					/// HARD CODING!!!!!!!!!!!! 
 				);
 				break;
 
@@ -534,6 +554,20 @@ class ImporterEntityMetadataWrapper  {
 		}	// end switch
 
 		return $value;
+	}
+
+	/////////////////////////////////
+	///////// FORMATTERS ////////////
+	/////////////////////////////////
+
+	// formats a taxonomy term object
+	public function format_taxonomy_term($name) {
+		$term = array(
+			'name' => $name,
+			'vid' => 1, // The VID of the vocabulary this term should be saved under
+		);
+
+		return $term;
 	}
 
 	// builds a file array and returns it.
