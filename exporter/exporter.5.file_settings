@@ -13,7 +13,7 @@ function csv_exporter_file_settings($form, &$form_state, $form_values) {
 
 
 	$date = date('m_d_Y', time());
-	$default_file_name = 'csv_export_' . $date . '.csv';
+	$default_file_name = 'csv_export_' . $form_values['entity_type'] .'_'. $form_values['entity_bundle'] . '_' . $date . '.csv';
 
 	$form['file_name'] = array(
 		'#type' => 'textfield',
