@@ -82,7 +82,7 @@ class CSVExporterEntityMetadataWrapper {
 			'field_name' => $field_name,
 			'data_name' => $data_name,
 			'is_single' => $field_is_single,
-			'subvalue_delimiter' => ',',
+			'subvalue_delimiter' => '|',
 		);
 
 		if ($field_name && $data_name) {

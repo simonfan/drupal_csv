@@ -103,7 +103,7 @@ function csv_importer_map_fields($form, &$form_state, $form_values) {
       '#title' => t('Subfield delimiter'),
       '#size' => 1,
 
-      '#default_value' => ',',
+      '#default_value' => '|',
     );
 
   }
