@@ -72,8 +72,14 @@ function csv_importer_loop_csv($form, &$form_state, $form_values) {
 		$action = NULL;
 
 		// first check if the entity already exists
-		if ( isset($identifier_field) && $identifier_field != '' ) {
-			$identifier_field_value = $row_columns[$form_values['identifier_field_name']];
+		if ( isset($form_values['identifier_field_name']) && $form_values['identifier_field_name'] != '' ) {
+
+			$identifier_field_col_no = array_search(
+				$form_values['identifier_field_name'],
+				$form_values['csv_col_names']
+			);
+
+			$identifier_field_value = $row_columns[ $identifier_field_col_no ];
 
 			// entity_load function returns an array of entities
 			$entity = entity_load(
