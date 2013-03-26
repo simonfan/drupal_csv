@@ -500,9 +500,9 @@ class ImporterEntityMetadataWrapper  {
 					$value = FALSE;
 
 				} else {
+					$file_name = $value;
 
-					$value = $temp_file_base_path . '/' . $value;
-					$value = $this->format_file($value);
+					$value = $this->format_file($temp_file_base_path, $file_name);
 
 				}
 				break;
@@ -512,10 +512,9 @@ class ImporterEntityMetadataWrapper  {
 					$value = FALSE;
 
 				} else {
+					$file_name = $value;
 
-					$value = $temp_file_base_path . '/' . $value;
-
-					$value = $this->format_file($value);
+					$value = $this->format_file($temp_file_base_path, $file_name);
 
 				}
 				break;
@@ -578,25 +577,33 @@ class ImporterEntityMetadataWrapper  {
 
 	// builds a file array and returns it.
 	// requires the filepath.
-	public function format_file($filepath) {
-		$fileexists = file_exists($filepath);
+	public function format_file($temp_file_base_path, $temp_file_name, $replace = FILE_EXISTS_REPLACE) {
 
-		if ($filepath && $fileexists) {
+
+		// testing the temp file
+		$temp_file_path = $temp_file_base_path . '/' . $temp_file_name;
+		$temp_file_exists = file_exists($temp_file_path);
+
+		// testing to see if that file already exists.
+
+
+		if ($temp_file_path && $temp_file_exists) {
 			// Create managed File object and associate with Image field.
 			$file = (object) array(
 				'uid' => 1,
-				'uri' => $filepath,
-				'filemime' => file_get_mimetype($filepath),
+				'uri' => $temp_file_path,
+				'filemime' => file_get_mimetype($temp_file_path),
 				'status' => 1,
 				'display' => 1,
 			);
+
 			// We save the file to the root of the files directory.
-			$file = file_copy($file, 'public://');
+			$file = file_copy($file, 'public://', $replace);
 
 			return (array) $file;
 
 		} else {
-			drupal_set_message('File '. $filepath . ' does not exist. It was not uploaded.');
+			drupal_set_message('File '. $temp_file_path . ' does not exist. It was not uploaded.');
 			return FALSE;
 		}
 	}
